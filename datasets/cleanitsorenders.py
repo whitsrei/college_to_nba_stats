@@ -1,4 +1,5 @@
 import csv
+from tabulate import tabulate
 
 def get_table(filename):
     table = []
@@ -18,7 +19,10 @@ def main():
     for row in table:
         while len(row) < 58:
             row.append('NA')
-    
+   
+    f = open( 'git_it.csv', 'w')
+    f.write(tabulate(table))
+    f.close()
 
 
 
