@@ -13,7 +13,8 @@ def main():
 
     find_stat_correlation_to_NBA_PTS(table, headers)
         
-    knn(table, headers)
+    #knn(table, headers)
+    knnPrediction(table, headers)
 
 def get_table(filename):
     table = []
@@ -129,7 +130,7 @@ def knn_guess(train_set, test_set, k_val):
     top_k = train_set[:k]
 
     # calculate the averages from the nearest neighbors
-    
+    '''
     avg_list = [[] for i in range(len(top_k[0]))]
     for row in top_k:
         for i in range(1,len(row)):
@@ -137,11 +138,16 @@ def knn_guess(train_set, test_set, k_val):
     
     avg_list = avg_list[1:]
     avgs = [np.mean(i) for i in avg_list]
-    
+    '''
+    sum_ppg = 0
+    for player in top_k:
+        sum_ppg += player[10]
+    avg_ppg = sum_ppg/len(top_k)
+
     for row in train_set:
         row.pop()
     
-    return avgs
+    return avg_ppg
 
 def k_fold(table):
     randomized = table[:]
@@ -181,6 +187,30 @@ def knn(table, headers):
                 print(headers[i] + " -> " + "%.2f" % my_guess[i-1])
             print("This is the weird value at the end... i think it might be left over from adding values to the end: " + str(my_guess[-1]))
             print("----------------------------------------")
+
+def knnPrediction(table, headers):    
+    folds = k_fold(table)
+    print("---------------------")
+    print("Self-Coded: KNN")
+    print("---------------------")
+    differences = []
+    for i in range(len(folds)):
+        train_set = []
+
+        for x in folds:
+            if x != folds[i]:
+                for item in x:
+                    train_set.append(item)
+        for j in folds[i]:
+            my_guess = knn_guess(train_set, j, 10)
+            print ("Player: " + j[0])
+            print ("NBA PPG: " + str(j[10]))
+            print ("predicted PPG: " + str(my_guess))
+            diff = j[10] - my_guess
+            differences.append(abs(diff))
+    print("-----------------------------------------------------------------------------")
+    print ("average error: " + str(np.mean(differences)))
+    print ("median error: " + str(np.median(differences)))
 
 def find_stat_correlation_to_NBA_PTS(table, headers):
     NBA_PTS = get_column(table, 10)
