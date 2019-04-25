@@ -1,8 +1,8 @@
-#from tabulate import tabulate
 import operator
 import random
 import math
 import numpy as np
+from sklearn.neighbors import KNeighborsRegressor
 
 def main():
     #fxn that calls KNN-self-done
@@ -11,10 +11,51 @@ def main():
     headers = start_table[0]
     table = start_table[1:]
 
-    find_stat_correlation_to_NBA_PTS(table, headers)
+    #find_stat_correlation_to_NBA_PTS(table, headers)
         
     #knn(table, headers)
-    knnPrediction(table, headers)
+    #knnPrediction(table, headers)
+    sci_kit(table)
+
+def sci_kit(table):
+    ensemble_size = 6
+    list_of_ind = [i for i in range(1,10)]
+    player_pred = [0 for _ in range(len(table))]
+    Y = [row[10] for row in table]
+
+    for _ in range(ensemble_size):
+        X = []
+        #randomly generate 4 numbers to be included
+        attributes = list_of_ind
+        random.shuffle(attributes)
+        attributes = attributes[:4]
+        
+        for row in table:
+            inter = []
+            for i in attributes:
+                inter.append(row[i])
+            X.append(inter)
+
+        n = KNeighborsRegressor(n_neighbors=5)
+        n.fit(X,Y)
+
+        for i, player in enumerate(table):
+            rows_to_analyze = [player[a] for a in attributes]
+            player_pred[i] += (n.predict([rows_to_analyze]))[0]
+
+    final_pred = [pred / ensemble_size for pred in player_pred]
+    
+    total_error = 0
+
+    for i,player in enumerate(table):
+        print("Player -> " , player[0])
+        print("Guessed PPG " , final_pred[i])
+        print("Actual PPG " , player[10])
+        print()
+        total_error += abs(final_pred[i] - player[10])
+
+    print("---------------------------------")
+    print("Total points off for sci-kit learn: %.2f" % (total_error / len(table)))
 
 def get_table(filename):
     table = []
